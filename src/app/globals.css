@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --shadow-card: 0 4px 20px rgba(46, 107, 122, 0.12);
+    --shadow-btn:  0 4px 14px rgba(46, 107, 122, 0.35);
+  }
+
+  body {
+    @apply font-body bg-brand-off-white text-[#0f1f28] overflow-x-hidden;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-brand-teal text-white font-heading font-semibold
+           text-base px-7 py-3.5 rounded-full border-none cursor-pointer no-underline
+           transition-all duration-200 hover:bg-brand-teal-dark hover:-translate-y-0.5;
+    box-shadow: var(--shadow-btn);
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center gap-2 bg-transparent text-brand-teal-dark font-heading
+           font-semibold text-base px-7 py-3.5 rounded-full cursor-pointer no-underline
+           transition-all duration-200 hover:bg-brand-teal/10 hover:-translate-y-0.5;
+    border: 2.5px solid #2E6B7A;
+  }
+
+  .btn-white {
+    @apply inline-flex items-center gap-2 bg-white text-brand-teal-dark font-heading
+           font-bold text-base px-6 py-3 rounded-full border-none cursor-pointer
+           no-underline transition-all duration-200 hover:bg-brand-yellow hover:-translate-y-0.5;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.22);
+  }
+
+  /* ── Cards ── */
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-1.5;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ── Section ── */
+  .section-eyebrow {
+    @apply font-heading text-xs font-semibold uppercase tracking-widest text-brand-green-dark mb-2;
+  }
+
+  .section-title {
+    @apply font-display text-3xl md:text-4xl text-[#0f1f28];
+    text-wrap: balance;
+  }
+
+  .inner {
+    @apply max-w-7xl mx-auto px-4 md:px-6;
+  }
+
+  /* ── Product badge ── */
+  .badge-sale { @apply absolute top-3 left-3 bg-red-500 text-white font-heading font-semibold text-xs px-2.5 py-1 rounded-full z-10; }
+  .badge-new  { @apply absolute top-3 left-3 bg-brand-teal text-white font-heading font-semibold text-xs px-2.5 py-1 rounded-full z-10; }
+  .badge-top  { @apply absolute top-3 left-3 bg-brand-yellow text-brand-teal-dark font-heading font-semibold text-xs px-2.5 py-1 rounded-full z-10; }
+}
