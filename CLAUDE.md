@@ -118,9 +118,10 @@ Nunito               → body font     → CSS var: --font-nunito   → Tailwind
 - All placeholder toy images saved to `public/images/`
 - Dev server tested: `npm run dev` → http://localhost:3000 (Status 200 ✅)
 - Git initialized, all code pushed to GitHub main branch
+- Products listing page `/products` — filter sidebar, sort bar, pagination (Status 200 ✅)
 
 ### 🔲 Next Steps (in order)
-1. Products listing page (`/products`)
+1. Single product page (`/products/[slug]`)
 2. Single product page (`/products/[slug]`)
 3. Category page (`/category/[slug]`)
 4. Cart page (`/cart`)
@@ -187,7 +188,7 @@ totolands/
 ## Customer Website Pages
 ```
 /                    → Home page          ✅ DONE
-/products            → All products       🔲 TODO
+/products            → All products       ✅ DONE
 /products/[slug]     → Single product     🔲 TODO
 /category/[slug]     → Products by cat    🔲 TODO
 /cart                → Shopping cart      🔲 TODO
