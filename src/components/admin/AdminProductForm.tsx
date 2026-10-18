@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 interface Category { id: string; name: string }
 
@@ -45,12 +46,35 @@ export default function AdminProductForm({ isEdit = false, productId, initial = 
     inBox:       initial.inBox       ?? '',
     image:       initial.image       ?? '',
   })
-  const [saving,  setSaving]  = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error,   setError]   = useState('')
+  const [saving,    setSaving]    = useState(false)
+  const [success,   setSuccess]   = useState(false)
+  const [error,     setError]     = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [uploadErr, setUploadErr] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   function setField(key: keyof ProductData, val: string) {
     setForm(f => ({ ...f, [key]: val }))
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setUploadErr('')
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      setField('image', data.url)
+    } catch (err: any) {
+      setUploadErr(err.message)
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -214,12 +238,45 @@ export default function AdminProductForm({ isEdit = false, productId, initial = 
         </div>
 
         <div>
-          <label className={labelCls}>Image URL (main)</label>
-          <input type="text" className={inputCls} placeholder="/images/prod-rc-car.jpg"
-            value={form.image} onChange={e => setField('image', e.target.value)} />
-          <p className="font-body text-xs text-gray-400 mt-1">
-            Cloudinary upload will be wired here in the next step.
-          </p>
+          <label className={labelCls}>Product Image</label>
+
+          {/* Preview */}
+          {form.image && (
+            <div className="relative w-32 h-32 rounded-xl overflow-hidden border-2 border-brand-green-light mb-3">
+              <Image src={form.image} alt="Product preview" fill className="object-cover" />
+            </div>
+          )}
+
+          {/* Upload button */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="btn-outline text-sm px-4 py-2 disabled:opacity-60">
+              {uploading ? '⏳ Uploading…' : form.image ? '🔄 Change Image' : '📷 Upload Image'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleImageUpload}
+            />
+            {form.image && !uploading && (
+              <span className="font-body text-xs text-brand-green font-semibold">✓ Image uploaded</span>
+            )}
+          </div>
+
+          {/* Fallback: manual URL */}
+          <div className="mt-3">
+            <label className="block font-body text-xs text-gray-400 mb-1">Or paste image URL directly</label>
+            <input type="text" className={inputCls} placeholder="/images/prod-rc-car.jpg or https://…"
+              value={form.image} onChange={e => setField('image', e.target.value)} />
+          </div>
+
+          {uploadErr && <p className="font-body text-xs text-red-500 mt-1">{uploadErr}</p>}
+          <p className="font-body text-xs text-gray-400 mt-1">Max 5 MB · JPG, PNG, or WebP</p>
         </div>
       </div>
 
