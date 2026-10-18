@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useCart } from '@/lib/cart-context'
@@ -39,9 +39,18 @@ export default function CheckoutClient() {
   const [errors, setErrors]           = useState<Partial<DeliveryForm>>({})
   const [placing, setPlacing]         = useState(false)
   const [orderId, setOrderId]         = useState('')
+  const payfastFormRef                = useRef<HTMLFormElement>(null)
+  const [payfastData, setPayfastData] = useState<{ url: string; params: Record<string, string> } | null>(null)
 
   const deliveryFee = totalPrice >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
   const grandTotal  = totalPrice + deliveryFee
+
+  // Auto-submit the PayFast hidden form once params are ready
+  useEffect(() => {
+    if (payfastData && payfastFormRef.current) {
+      payfastFormRef.current.submit()
+    }
+  }, [payfastData])
 
   // ── Redirect to cart if empty ──────────────────────────────────────────────
   if (items.length === 0 && step !== 'confirmed') {
@@ -79,6 +88,7 @@ export default function CheckoutClient() {
   async function handlePlaceOrder() {
     setPlacing(true)
     try {
+      // 1. Create order in DB
       const res = await fetch('/api/orders', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,9 +109,28 @@ export default function CheckoutClient() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Order failed')
-      setOrderId(data.orderId)
+
+      const newOrderId: string = data.orderId
       clearCart()
-      setStep('confirmed')
+
+      if (paymentMethod === 'payfast') {
+        // 2. Get signed PayFast form params
+        const pfRes = await fetch('/api/payfast/initiate', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: newOrderId }),
+        })
+        const pfData = await pfRes.json()
+        if (!pfRes.ok) throw new Error(pfData.error || 'PayFast init failed')
+
+        // 3. Store params and trigger hidden form submit in next render
+        setPayfastData({ url: pfData.url, params: pfData.params })
+        setOrderId(newOrderId)
+        // form submit happens via useEffect below through ref
+      } else {
+        setOrderId(newOrderId)
+        setStep('confirmed')
+      }
     } catch (err: any) {
       alert('Sorry, could not place order: ' + err.message)
     } finally {
@@ -139,6 +168,23 @@ export default function CheckoutClient() {
   return (
     <main>
       <PageHeader step={step} />
+
+      {/* Hidden PayFast auto-submit form */}
+      {payfastData && (
+        <>
+          <form ref={payfastFormRef} method="POST" action={payfastData.url} className="hidden">
+            {Object.entries(payfastData.params).map(([k, v]) => (
+              <input key={k} type="hidden" name={k} value={v} />
+            ))}
+          </form>
+          {/* Overlay while redirecting */}
+          <div className="fixed inset-0 z-50 bg-brand-teal/90 flex flex-col items-center justify-center gap-4">
+            <div className="text-5xl animate-bounce">💳</div>
+            <p className="font-display text-2xl text-white">Redirecting to PayFast…</p>
+            <p className="font-body text-sm text-white/70">Please do not close this window</p>
+          </div>
+        </>
+      )}
 
       <div className="inner py-8">
 
