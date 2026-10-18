@@ -3,6 +3,8 @@ import { getServerSession }          from 'next-auth'
 import { authOptions }               from '@/lib/auth'
 import { prisma }                    from '@/lib/prisma'
 import { resend }                    from '@/lib/resend'
+
+export const dynamic = 'force-dynamic'
 import { buildOrderConfirmationEmail } from '@/lib/email-templates'
 
 export async function POST(req: NextRequest) {

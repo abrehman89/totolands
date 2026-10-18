@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma }            from '@/lib/prisma'
 import { generateSignature } from '@/lib/payfast'
 
-// PayFast IPN — called by PayFast servers after payment
+export const dynamic = 'force-dynamic'
+
 export async function POST(req: NextRequest) {
   try {
     const text   = await req.text()
