@@ -1,20 +1,23 @@
 'use client'
-import { CATEGORIES, AGE_GROUPS } from '@/lib/products-data'
+import { AGE_GROUPS } from '@/lib/products-data'
 
 interface FiltersProps {
   selectedCategory: string
   selectedAge: string
   priceRange: [number, number]
+  categories: string[]
   onCategory: (c: string) => void
   onAge: (a: string) => void
   onPrice: (r: [number, number]) => void
   onReset: () => void
   totalResults: number
+  hideCategoryFilter?: boolean
 }
 
 export default function ProductFilters({
   selectedCategory, selectedAge, priceRange,
-  onCategory, onAge, onPrice, onReset, totalResults,
+  categories, onCategory, onAge, onPrice, onReset, totalResults,
+  hideCategoryFilter = false,
 }: FiltersProps) {
   return (
     <aside className="w-full lg:w-64 flex-shrink-0">
@@ -37,28 +40,30 @@ export default function ProductFilters({
         </p>
 
         {/* Category */}
-        <div className="mb-6">
-          <h3 className="font-heading font-semibold text-[0.85rem] text-[#0f1f28] uppercase
-                         tracking-wider mb-3">
-            Category
-          </h3>
-          <ul className="space-y-1">
-            {CATEGORIES.map(cat => (
-              <li key={cat}>
-                <button
-                  onClick={() => onCategory(cat)}
-                  className={`w-full text-left text-[0.87rem] px-3 py-1.5 rounded-lg font-body
-                              transition-all ${
-                    selectedCategory === cat
-                      ? 'bg-brand-teal text-white font-semibold'
-                      : 'text-[#3d5a65] hover:bg-brand-green-light hover:text-brand-teal-dark'
-                  }`}>
-                  {cat}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {!hideCategoryFilter && (
+          <div className="mb-6">
+            <h3 className="font-heading font-semibold text-[0.85rem] text-[#0f1f28] uppercase
+                           tracking-wider mb-3">
+              Category
+            </h3>
+            <ul className="space-y-1">
+              {categories.map(cat => (
+                <li key={cat}>
+                  <button
+                    onClick={() => onCategory(cat)}
+                    className={`w-full text-left text-[0.87rem] px-3 py-1.5 rounded-lg font-body
+                                transition-all ${
+                      selectedCategory === cat
+                        ? 'bg-brand-teal text-white font-semibold'
+                        : 'text-[#3d5a65] hover:bg-brand-green-light hover:text-brand-teal-dark'
+                    }`}>
+                    {cat}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Age Group */}
         <div className="mb-6 pt-5 border-t border-gray-100">

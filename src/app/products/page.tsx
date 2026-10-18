@@ -1,12 +1,20 @@
 import type { Metadata } from 'next'
 import ProductsGrid from '@/components/products/ProductsGrid'
+import { getAllProducts, getCategories } from '@/lib/db-products'
 
 export const metadata: Metadata = {
   title: 'All Products — Totolands',
   description: 'Browse our full range of premium kids toys. Filter by category, age group and price. Fast delivery across Pakistan.',
 }
 
-export default function ProductsPage() {
+export const revalidate = 60 // re-fetch from DB every 60 seconds
+
+export default async function ProductsPage() {
+  const [products, categories] = await Promise.all([
+    getAllProducts(),
+    getCategories(),
+  ])
+
   return (
     <main>
       {/* Page Header */}
@@ -19,10 +27,8 @@ export default function ProductsPage() {
             All Products
           </h1>
           <p className="font-body text-white/80 mt-2 text-sm">
-            Discover 1,200+ toys for kids of all ages — delivered across Pakistan
+            Discover {products.length}+ toys for kids of all ages — delivered across Pakistan
           </p>
-
-          {/* Breadcrumb */}
           <nav className="mt-4 flex items-center gap-2 text-xs font-body text-white/60">
             <a href="/" className="hover:text-white transition-colors">Home</a>
             <span>/</span>
@@ -31,8 +37,7 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Products Grid with Filters */}
-      <ProductsGrid />
+      <ProductsGrid products={products} categories={categories} />
     </main>
   )
 }

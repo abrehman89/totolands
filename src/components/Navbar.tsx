@@ -2,9 +2,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useSession, signOut } from 'next-auth/react'
+import { useCart } from '@/lib/cart-context'
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const { totalItems } = useCart()
+  const { data: session } = useSession()
 
   return (
     <>
@@ -49,22 +53,49 @@ export default function Navbar() {
             </button>
 
             {/* Cart */}
-            <button className="relative text-white p-2 rounded-full hover:bg-white/15 transition-colors" aria-label="Cart">
+            <Link href="/cart" className="relative text-white p-2 rounded-full hover:bg-white/15 transition-colors" aria-label="Cart">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
                 <path d="M16 10a4 4 0 0 1-8 0"/>
               </svg>
-              <span className="absolute top-1 right-1 bg-brand-yellow text-brand-teal-dark text-[0.6rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">5</span>
-            </button>
-
-            {/* Login */}
-            <Link href="/auth/login"
-              className="hidden sm:block bg-brand-yellow text-brand-teal-dark font-heading font-semibold
-                         text-sm px-4 py-2 rounded-full ml-1 hover:bg-brand-yellow-dark transition-all
-                         hover:-translate-y-px">
-              Login / Sign Up
+              {totalItems > 0 && (
+                <span className="absolute top-1 right-1 bg-brand-yellow text-brand-teal-dark text-[0.6rem] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems > 9 ? '9+' : totalItems}
+                </span>
+              )}
             </Link>
+
+            {/* Auth */}
+            {session ? (
+              <div className="hidden sm:flex items-center gap-2 ml-1">
+                {session.user.role === 'ADMIN' && (
+                  <Link href="/admin"
+                    className="text-white/80 font-heading font-semibold text-xs px-3 py-1.5
+                               rounded-full hover:bg-white/15 transition-colors">
+                    Admin
+                  </Link>
+                )}
+                <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5">
+                  <span className="font-heading font-semibold text-white text-xs">
+                    {session.user.name?.split(' ')[0]}
+                  </span>
+                </div>
+                <button
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className="text-white/70 font-heading font-semibold text-xs hover:text-white
+                             transition-colors">
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link href="/auth/login"
+                className="hidden sm:block bg-brand-yellow text-brand-teal-dark font-heading font-semibold
+                           text-sm px-4 py-2 rounded-full ml-1 hover:bg-brand-yellow-dark transition-all
+                           hover:-translate-y-px">
+                Login / Sign Up
+              </Link>
+            )}
 
             {/* Mobile menu toggle */}
             <button className="md:hidden text-white p-2 rounded-full hover:bg-white/15 ml-1"
@@ -91,10 +122,17 @@ export default function Navbar() {
             <input type="text" placeholder="Search toys…"
               className="w-full pl-9 pr-4 py-2 rounded-full bg-white/15 text-white placeholder-white/60 text-sm outline-none"/>
           </div>
-          <Link href="/auth/login"
-            className="bg-brand-yellow text-brand-teal-dark font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">
-            Login / Sign Up
-          </Link>
+          {session ? (
+            <button onClick={() => signOut({ callbackUrl: '/' })}
+              className="bg-white/20 text-white font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">
+              Logout ({session.user.name?.split(' ')[0]})
+            </button>
+          ) : (
+            <Link href="/auth/login"
+              className="bg-brand-yellow text-brand-teal-dark font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">
+              Login / Sign Up
+            </Link>
+          )}
         </div>
       )}
 

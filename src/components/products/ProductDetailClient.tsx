@@ -3,16 +3,16 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import ProductCard from '@/components/home/ProductCard'
-import { ProductDetail, ALL_PRODUCTS } from '@/lib/products-data'
+import { ProductDetail } from '@/lib/products-data'
 
-export default function ProductDetailClient({ product }: { product: ProductDetail }) {
+export default function ProductDetailClient({ product, allProducts }: { product: ProductDetail, allProducts: ProductDetail[] }) {
   const [activeImage, setActiveImage] = useState(0)
   const [qty, setQty]                 = useState(1)
   const [wishlisted, setWishlisted]   = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
   const [activeTab, setActiveTab]     = useState<'description' | 'features' | 'delivery'>('description')
 
-  const related = ALL_PRODUCTS
+  const related = allProducts
     .filter(p => p.category === product.category && p.id !== product.id)
     .slice(0, 4)
 

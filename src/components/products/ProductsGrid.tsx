@@ -2,12 +2,19 @@
 import { useState, useMemo } from 'react'
 import ProductCard from '@/components/home/ProductCard'
 import ProductFilters from '@/components/products/ProductFilters'
-import { ALL_PRODUCTS, SORT_OPTIONS } from '@/lib/products-data'
+import { ProductDetail } from '@/lib/products-data'
+import { SORT_OPTIONS } from '@/lib/products-data'
 
 const PAGE_SIZE = 8
 
-export default function ProductsGrid() {
-  const [selectedCategory, setSelectedCategory] = useState('All')
+interface Props {
+  products: ProductDetail[]
+  categories: string[]
+  initialCategory?: string
+}
+
+export default function ProductsGrid({ products, categories, initialCategory = 'All' }: Props) {
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [selectedAge, setSelectedAge]           = useState('All Ages')
   const [priceRange, setPriceRange]             = useState<[number, number]>([0, 99999])
   const [sort, setSort]                         = useState('featured')
@@ -23,7 +30,7 @@ export default function ProductsGrid() {
   }
 
   const filtered = useMemo(() => {
-    let list = [...ALL_PRODUCTS]
+    let list = [...products]
 
     if (selectedCategory !== 'All') {
       list = list.filter(p => p.category === selectedCategory)
@@ -31,22 +38,19 @@ export default function ProductsGrid() {
     list = list.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1])
 
     switch (sort) {
-      case 'price-asc':  list.sort((a, b) => a.price - b.price);         break
-      case 'price-desc': list.sort((a, b) => b.price - a.price);         break
-      case 'rating':     list.sort((a, b) => b.rating - a.rating);       break
-      case 'newest':     list.sort((a, b) => b.reviews - a.reviews);     break
+      case 'price-asc':  list.sort((a, b) => a.price - b.price);   break
+      case 'price-desc': list.sort((a, b) => b.price - a.price);   break
+      case 'rating':     list.sort((a, b) => b.rating - a.rating); break
+      case 'newest':     list.sort((a, b) => b.reviews - a.reviews); break
     }
 
     return list
-  }, [selectedCategory, selectedAge, priceRange, sort])
+  }, [products, selectedCategory, selectedAge, priceRange, sort])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
-  function handleFilterChange(fn: () => void) {
-    fn()
-    setPage(1)
-  }
+  function handleFilterChange(fn: () => void) { fn(); setPage(1) }
 
   return (
     <div className="inner py-8">
@@ -63,15 +67,16 @@ export default function ProductsGrid() {
 
       <div className="flex gap-7 items-start">
 
-        {/* Sidebar filters */}
+        {/* Sidebar */}
         <div className={`${mobileFiltersOpen ? 'block' : 'hidden'} lg:block`}>
           <ProductFilters
             selectedCategory={selectedCategory}
             selectedAge={selectedAge}
             priceRange={priceRange}
-            onCategory={c  => handleFilterChange(() => setSelectedCategory(c))}
-            onAge={a       => handleFilterChange(() => setSelectedAge(a))}
-            onPrice={r     => handleFilterChange(() => setPriceRange(r))}
+            categories={['All', ...categories]}
+            onCategory={c => handleFilterChange(() => setSelectedCategory(c))}
+            onAge={a      => handleFilterChange(() => setSelectedAge(a))}
+            onPrice={r    => handleFilterChange(() => setPriceRange(r))}
             onReset={reset}
             totalResults={filtered.length}
           />
@@ -115,9 +120,7 @@ export default function ProductsGrid() {
               <p className="font-display text-5xl mb-4">🧸</p>
               <h3 className="font-display text-xl text-brand-teal-dark mb-2">No products found</h3>
               <p className="font-body text-sm text-gray-400 mb-5">Try changing your filters</p>
-              <button onClick={reset} className="btn-primary text-sm px-6 py-2.5">
-                Clear Filters
-              </button>
+              <button onClick={reset} className="btn-primary text-sm px-6 py-2.5">Clear Filters</button>
             </div>
           )}
 
@@ -129,14 +132,11 @@ export default function ProductsGrid() {
                 disabled={page === 1}
                 className="w-9 h-9 rounded-full border-2 border-gray-200 font-heading font-semibold
                            text-sm text-[#3d5a65] flex items-center justify-center
-                           disabled:opacity-40 hover:border-brand-teal hover:text-brand-teal
-                           transition-all">
+                           disabled:opacity-40 hover:border-brand-teal hover:text-brand-teal transition-all">
                 ‹
               </button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                <button
-                  key={n}
-                  onClick={() => setPage(n)}
+                <button key={n} onClick={() => setPage(n)}
                   className={`w-9 h-9 rounded-full font-heading font-semibold text-sm flex items-center
                               justify-center transition-all ${
                     n === page
@@ -151,8 +151,7 @@ export default function ProductsGrid() {
                 disabled={page === totalPages}
                 className="w-9 h-9 rounded-full border-2 border-gray-200 font-heading font-semibold
                            text-sm text-[#3d5a65] flex items-center justify-center
-                           disabled:opacity-40 hover:border-brand-teal hover:text-brand-teal
-                           transition-all">
+                           disabled:opacity-40 hover:border-brand-teal hover:text-brand-teal transition-all">
                 ›
               </button>
             </div>

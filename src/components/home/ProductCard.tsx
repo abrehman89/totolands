@@ -2,6 +2,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useCart } from '@/lib/cart-context'
 
 export interface Product {
   id: string
@@ -18,6 +19,15 @@ export interface Product {
 
 export default function ProductCard({ product }: { product: Product }) {
   const [wishlisted, setWishlisted] = useState(false)
+  const [added, setAdded] = useState(false)
+  const { addItem } = useCart()
+
+  function handleAdd() {
+    addItem({ id: product.id, name: product.name, category: product.category,
+              price: product.price, oldPrice: product.oldPrice, image: product.image })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 1500)
+  }
 
   return (
     <div className="bg-white rounded-[1.25rem] overflow-hidden card-hover
@@ -79,10 +89,14 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
           <button
-            className="bg-brand-teal text-white font-heading font-semibold text-[0.82rem]
-                       px-3.5 py-1.5 rounded-full flex items-center gap-1 whitespace-nowrap
-                       hover:bg-brand-teal-dark hover:scale-105 transition-all">
-            + Add
+            onClick={handleAdd}
+            className={`font-heading font-semibold text-[0.82rem] px-3.5 py-1.5 rounded-full
+                       flex items-center gap-1 whitespace-nowrap transition-all ${
+              added
+                ? 'bg-brand-green text-white scale-105'
+                : 'bg-brand-teal text-white hover:bg-brand-teal-dark hover:scale-105'
+            }`}>
+            {added ? '✓ Added' : '+ Add'}
           </button>
         </div>
       </div>

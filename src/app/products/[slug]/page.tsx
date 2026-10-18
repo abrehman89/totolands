@@ -1,16 +1,19 @@
-import { notFound }         from 'next/navigation'
-import type { Metadata }      from 'next'
-import { ALL_PRODUCTS }       from '@/lib/products-data'
-import ProductDetailClient    from '@/components/products/ProductDetailClient'
+import { notFound }           from 'next/navigation'
+import type { Metadata }        from 'next'
+import { getProductBySlug, getProductSlugs, getAllProducts } from '@/lib/db-products'
+import ProductDetailClient      from '@/components/products/ProductDetailClient'
 
 interface Props { params: { slug: string } }
 
-export function generateStaticParams() {
-  return ALL_PRODUCTS.map(p => ({ slug: p.id }))
+export const revalidate = 60
+
+export async function generateStaticParams() {
+  const slugs = await getProductSlugs()
+  return slugs.map(slug => ({ slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const product = ALL_PRODUCTS.find(p => p.id === params.slug)
+  const product = await getProductBySlug(params.slug)
   if (!product) return { title: 'Product Not Found — Totolands' }
   return {
     title: `${product.name} — Totolands`,
@@ -18,8 +21,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default function ProductPage({ params }: Props) {
-  const product = ALL_PRODUCTS.find(p => p.id === params.slug)
+export default async function ProductPage({ params }: Props) {
+  const [product, allProducts] = await Promise.all([
+    getProductBySlug(params.slug),
+    getAllProducts(),
+  ])
   if (!product) notFound()
-  return <ProductDetailClient product={product} />
+  return <ProductDetailClient product={product} allProducts={allProducts} />
 }

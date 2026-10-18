@@ -3,6 +3,8 @@ import { Fredoka, Nunito } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import { CartProvider } from '@/lib/cart-context'
+import SessionProvider from '@/components/SessionProvider'
 
 const fredoka = Fredoka({
   subsets: ['latin'],
@@ -30,9 +32,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fredoka.variable} ${nunito.variable}`}>
       <body>
-        <Navbar />
-        {children}
-        <Footer />
+        <SessionProvider>
+          <CartProvider>
+            <Navbar />
+            {children}
+            <Footer />
+          </CartProvider>
+        </SessionProvider>
       </body>
     </html>
   )

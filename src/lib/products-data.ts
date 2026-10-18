@@ -1,6 +1,7 @@
 import { Product } from '@/components/home/ProductCard'
 
 export interface ProductDetail extends Product {
+  dbId?: string        // real DB cuid — present when fetched from DB, absent in mock data
   description: string
   features: string[]
   ageRange: string
