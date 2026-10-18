@@ -1,29 +1,30 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { ADMIN_ORDERS, STATUS_COLORS } from '@/lib/admin-data'
+import { prisma } from '@/lib/prisma'
 import AdminHeader from '@/components/admin/AdminHeader'
 import OrderStatusManager from '@/components/admin/OrderStatusManager'
 
 interface Props { params: { id: string } }
 
-export function generateStaticParams() {
-  return ADMIN_ORDERS.map(o => ({ id: o.id }))
-}
-
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  return { title: `Order ${params.id}` }
+  return { title: `Order #${params.id.slice(-8).toUpperCase()}` }
 }
 
-export default function AdminOrderDetailPage({ params }: Props) {
-  const order = ADMIN_ORDERS.find(o => o.id === params.id)
+export default async function AdminOrderDetailPage({ params }: Props) {
+  const order = await prisma.order.findUnique({
+    where: { id: params.id },
+    include: { items: true },
+  })
+
   if (!order) notFound()
 
   return (
     <div className="p-6 lg:p-8 mt-[56px] lg:mt-0">
       <AdminHeader
-        title={`Order ${order.id}`}
-        subtitle={`Placed on ${order.date} · ${order.items} item${order.items !== 1 ? 's' : ''}`}
+        title={`Order #${order.id.slice(-8).toUpperCase()}`}
+        subtitle={`Placed on ${new Date(order.createdAt).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' })} · ${order.items.length} item${order.items.length !== 1 ? 's' : ''}`}
         action={
           <Link href="/admin/orders" className="btn-outline text-sm px-5 py-2.5">
             ← All Orders
@@ -38,12 +39,16 @@ export default function AdminOrderDetailPage({ params }: Props) {
           <div className="bg-white rounded-2xl shadow-card p-6">
             <h2 className="font-display text-lg text-brand-teal-dark mb-4">Customer</h2>
             <div className="grid grid-cols-2 gap-3 font-body text-sm">
-              {[
-                ['Name',    order.customer],
-                ['Phone',   order.phone],
-                ['City',    order.city],
-                ['Payment', order.payment],
-              ].map(([k, v]) => (
+              {([
+                ['Name',     order.fullName],
+                ['Phone',    order.phone],
+                ['Email',    order.email ?? '—'],
+                ['City',     order.city],
+                ['Address',  order.address],
+                ['Province', order.province ?? '—'],
+                ['Payment',  order.paymentMethod],
+                ['Notes',    order.notes ?? '—'],
+              ] as [string, string][]).map(([k, v]) => (
                 <div key={k}>
                   <p className="text-xs text-gray-400 uppercase tracking-wider font-heading font-semibold mb-0.5">{k}</p>
                   <p className="text-[#0f1f28] font-semibold">{v}</p>
@@ -52,35 +57,47 @@ export default function AdminOrderDetailPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Order items (mock) */}
+          {/* Order items */}
           <div className="bg-white rounded-2xl shadow-card p-6">
             <h2 className="font-display text-lg text-brand-teal-dark mb-4">Items Ordered</h2>
             <div className="space-y-3">
-              {Array.from({ length: order.items }, (_, i) => (
-                <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+              {order.items.map(item => (
+                <div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-brand-green-light flex items-center justify-center text-lg">🧸</div>
+                    <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-brand-green-light flex-shrink-0">
+                      <Image src={item.image} alt={item.name} fill className="object-cover" />
+                    </div>
                     <div>
-                      <p className="font-heading font-semibold text-sm text-[#0f1f28]">Toy Item {i + 1}</p>
-                      <p className="font-body text-xs text-gray-400">Qty × 1</p>
+                      <p className="font-heading font-semibold text-sm text-[#0f1f28]">{item.name}</p>
+                      <p className="font-body text-xs text-gray-400">Qty × {item.qty}</p>
                     </div>
                   </div>
                   <p className="font-display text-sm text-brand-teal-dark">
-                    Rs. {Math.round(order.total / order.items).toLocaleString()}
+                    Rs. {(item.price * item.qty).toLocaleString()}
                   </p>
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between">
-              <span className="font-heading font-semibold text-base text-[#0f1f28]">Total</span>
-              <span className="font-display text-lg text-brand-teal-dark">Rs. {order.total.toLocaleString()}</span>
+            <div className="mt-4 pt-4 border-t border-gray-100 space-y-1.5">
+              <div className="flex justify-between font-body text-sm text-[#3d5a65]">
+                <span>Subtotal</span>
+                <span>Rs. {(order.total - order.deliveryFee).toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between font-body text-sm text-[#3d5a65]">
+                <span>Delivery</span>
+                <span>{order.deliveryFee === 0 ? 'Free' : `Rs. ${order.deliveryFee}`}</span>
+              </div>
+              <div className="flex justify-between font-heading font-semibold text-base text-[#0f1f28] pt-1">
+                <span>Total</span>
+                <span className="font-display text-lg text-brand-teal-dark">Rs. {order.total.toLocaleString()}</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Right — status manager */}
         <div>
-          <OrderStatusManager orderId={order.id} currentStatus={order.status} />
+          <OrderStatusManager orderId={order.id} currentStatus={order.status as any} />
         </div>
       </div>
     </div>

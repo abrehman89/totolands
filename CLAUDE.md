@@ -142,15 +142,17 @@ Nunito               → body font     → CSS var: --font-nunito   → Tailwind
   - Role: `ADMIN`
 - **Login tested and working** ✅
 
+### ✅ Completed Infrastructure
+- **Products + checkout wired to real DB** ✅
+- **`/orders`** — customer order history from Supabase ✅
+- **`/account`** — customer profile edit (name, phone) ✅
+
 ### 🔲 Next Steps (in order)
-1. **Wire products page to real DB** — replace mock `ALL_PRODUCTS` with Prisma queries so products listing + detail pages show real Supabase data
-2. **Wire checkout to save orders to DB** — POST `/api/orders` that saves Order + OrderItems to Supabase on checkout confirm
-3. **Customer order history page** (`/orders`) — show logged-in customer's past orders from DB
-4. **Customer profile page** (`/account`) — edit name, phone, saved addresses
-5. **Cloudinary image uploads** — upload images from admin product form instead of pasting URLs
-6. **Order confirmation email** — send via Resend after order placed
-7. **PayFast PK** — real online payment integration (COD already works)
-8. **Deploy to Vercel** + connect totolands.com domain
+1. **Cloudinary** — image upload in AdminProductForm (replace paste-URL with real upload)
+2. **Resend** — order confirmation email after checkout
+3. **PayFast PK** — real payment integration in checkout
+4. **Wire admin dashboard to real DB** — products/orders/customers/categories/banners all still use mock data
+5. **Deploy to Vercel** + connect totolands.com domain
 
 ---
 
@@ -267,8 +269,8 @@ totolands/
 /checkout            → Place order             ✅ DONE
 /auth/login          → Login                   ✅ DONE (wired to NextAuth)
 /auth/signup         → Signup                  ✅ DONE (wired to /api/auth/signup)
-/orders              → Order history           🔲 TODO
-/account             → Customer profile        🔲 TODO
+/orders              → Order history           ✅ DONE (real DB, server component)
+/account             → Customer profile        ✅ DONE (edit name/phone, sign out)
 ```
 
 ## Admin Pages Status

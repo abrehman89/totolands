@@ -1,17 +1,23 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ALL_PRODUCTS } from '@/lib/products-data'
+import { prisma } from '@/lib/prisma'
 import AdminHeader from '@/components/admin/AdminHeader'
 
 export const metadata: Metadata = { title: 'Products' }
+export const revalidate = 30
 
-export default function AdminProductsPage() {
+export default async function AdminProductsPage() {
+  const products = await prisma.product.findMany({
+    include: { category: true },
+    orderBy: { createdAt: 'desc' },
+  })
+
   return (
     <div className="p-6 lg:p-8 mt-[56px] lg:mt-0">
       <AdminHeader
         title="Products"
-        subtitle={`${ALL_PRODUCTS.length} total products`}
+        subtitle={`${products.length} total products`}
         action={
           <Link href="/admin/products/new" className="btn-primary text-sm px-5 py-2.5">
             + Add Product
@@ -33,9 +39,8 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {ALL_PRODUCTS.map(p => (
+              {products.map(p => (
                 <tr key={p.id} className="hover:bg-[#f9fbfc] transition-colors">
-                  {/* Product */}
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-brand-green-light flex-shrink-0">
@@ -45,25 +50,22 @@ export default function AdminProductsPage() {
                         <p className="font-heading font-semibold text-[0.88rem] text-[#0f1f28] leading-snug max-w-[200px] line-clamp-2">
                           {p.name}
                         </p>
-                        <p className="font-body text-[0.72rem] text-gray-400 mt-0.5">{p.id}</p>
+                        <p className="font-body text-[0.72rem] text-gray-400 mt-0.5">{p.slug}</p>
                       </div>
                     </div>
                   </td>
-                  {/* Category */}
                   <td className="px-5 py-3.5">
                     <span className="font-body text-xs bg-brand-green-light text-brand-teal-dark
                                      px-2.5 py-1 rounded-full font-semibold whitespace-nowrap">
-                      {p.category}
+                      {p.category.name}
                     </span>
                   </td>
-                  {/* Price */}
                   <td className="px-5 py-3.5 whitespace-nowrap">
                     <p className="font-display text-sm text-brand-teal-dark">Rs. {p.price.toLocaleString()}</p>
                     {p.oldPrice && (
                       <p className="font-body text-xs text-gray-400 line-through">Rs. {p.oldPrice.toLocaleString()}</p>
                     )}
                   </td>
-                  {/* Stock */}
                   <td className="px-5 py-3.5">
                     <span className={`font-heading font-semibold text-sm ${p.stock <= 5 ? 'text-red-500' : p.stock <= 10 ? 'text-brand-yellow-dark' : 'text-brand-green'}`}>
                       {p.stock}
@@ -72,7 +74,6 @@ export default function AdminProductsPage() {
                       <span className="ml-1.5 text-[0.65rem] font-body text-orange-500">Low</span>
                     )}
                   </td>
-                  {/* Badge */}
                   <td className="px-5 py-3.5">
                     {p.badge ? (
                       <span className={`text-[0.72rem] font-heading font-semibold px-2.5 py-0.5 rounded-full border ${
@@ -86,7 +87,6 @@ export default function AdminProductsPage() {
                       <span className="text-gray-300 text-xs">—</span>
                     )}
                   </td>
-                  {/* Actions */}
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
                       <Link href={`/admin/products/edit?id=${p.id}`}
@@ -94,7 +94,7 @@ export default function AdminProductsPage() {
                                    bg-brand-green-light px-3 py-1.5 rounded-lg transition-colors">
                         Edit
                       </Link>
-                      <Link href={`/products/${p.id}`} target="_blank"
+                      <Link href={`/products/${p.slug}`} target="_blank"
                         className="text-xs font-heading font-semibold text-[#3d5a65] hover:text-brand-teal
                                    bg-gray-100 px-3 py-1.5 rounded-lg transition-colors">
                         View

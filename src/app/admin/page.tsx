@@ -1,30 +1,65 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ADMIN_ORDERS, ADMIN_CUSTOMERS, STATUS_COLORS } from '@/lib/admin-data'
-import { ALL_PRODUCTS } from '@/lib/products-data'
+import { prisma } from '@/lib/prisma'
 import AdminHeader from '@/components/admin/AdminHeader'
 
 export const metadata: Metadata = { title: 'Overview' }
+export const revalidate = 30
 
-const totalRevenue  = ADMIN_ORDERS.filter(o => o.status !== 'Cancelled').reduce((s, o) => s + o.total, 0)
-const pendingOrders = ADMIN_ORDERS.filter(o => o.status === 'Pending').length
-const lowStock      = ALL_PRODUCTS.filter(p => p.stock <= 10).length
+const STATUS_COLORS: Record<string, string> = {
+  Pending:   'bg-yellow-100 text-yellow-700 border-yellow-200',
+  Confirmed: 'bg-blue-100 text-blue-700 border-blue-200',
+  Shipped:   'bg-purple-100 text-purple-700 border-purple-200',
+  Delivered: 'bg-green-100 text-green-700 border-green-200',
+  Cancelled: 'bg-red-100 text-red-700 border-red-200',
+}
 
-const STATS = [
-  { label: 'Total Revenue',    value: `Rs. ${totalRevenue.toLocaleString()}`, icon: '💰', color: 'bg-brand-teal',       text: 'text-white' },
-  { label: 'Total Orders',     value: ADMIN_ORDERS.length,                   icon: '📦', color: 'bg-brand-yellow',     text: 'text-brand-teal-dark' },
-  { label: 'Customers',        value: ADMIN_CUSTOMERS.length,                icon: '👥', color: 'bg-brand-green',      text: 'text-white' },
-  { label: 'Products',         value: ALL_PRODUCTS.length,                   icon: '🧸', color: 'bg-white',            text: 'text-brand-teal-dark' },
-  { label: 'Pending Orders',   value: pendingOrders,                         icon: '⏳', color: 'bg-white',            text: 'text-brand-teal-dark' },
-  { label: 'Low Stock Items',  value: lowStock,                              icon: '⚠️', color: 'bg-white',            text: 'text-brand-teal-dark' },
-]
+export default async function AdminOverviewPage() {
+  const [
+    ordersAgg,
+    orderCount,
+    customerCount,
+    productCount,
+    pendingCount,
+    lowStockCount,
+    recentOrders,
+  ] = await Promise.all([
+    prisma.order.aggregate({
+      _sum: { total: true },
+      where: { status: { not: 'Cancelled' } },
+    }),
+    prisma.order.count(),
+    prisma.user.count({ where: { role: 'CUSTOMER' } }),
+    prisma.product.count(),
+    prisma.order.count({ where: { status: 'Pending' } }),
+    prisma.product.count({ where: { stock: { lte: 10 } } }),
+    prisma.order.findMany({
+      take: 5,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true, fullName: true, total: true,
+        paymentMethod: true, status: true, createdAt: true,
+      },
+    }),
+  ])
 
-export default function AdminOverviewPage() {
-  const recentOrders = [...ADMIN_ORDERS].slice(0, 5)
+  const totalRevenue = ordersAgg._sum.total ?? 0
+
+  const STATS = [
+    { label: 'Total Revenue',   value: `Rs. ${totalRevenue.toLocaleString()}`, icon: '💰', color: 'bg-brand-teal',   text: 'text-white' },
+    { label: 'Total Orders',    value: orderCount,                             icon: '📦', color: 'bg-brand-yellow', text: 'text-brand-teal-dark' },
+    { label: 'Customers',       value: customerCount,                          icon: '👥', color: 'bg-brand-green',  text: 'text-white' },
+    { label: 'Products',        value: productCount,                           icon: '🧸', color: 'bg-white',        text: 'text-brand-teal-dark' },
+    { label: 'Pending Orders',  value: pendingCount,                           icon: '⏳', color: 'bg-white',        text: 'text-brand-teal-dark' },
+    { label: 'Low Stock Items', value: lowStockCount,                          icon: '⚠️', color: 'bg-white',        text: 'text-brand-teal-dark' },
+  ]
 
   return (
     <div className="p-6 lg:p-8 pt-6 lg:pt-8 mt-[56px] lg:mt-0">
-      <AdminHeader title="Dashboard Overview" subtitle={`Today — ${new Date('2026-10-17').toLocaleDateString('en-PK', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}`} />
+      <AdminHeader
+        title="Dashboard Overview"
+        subtitle={`Today — ${new Date().toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`}
+      />
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
@@ -47,48 +82,52 @@ export default function AdminOverviewPage() {
               View All →
             </Link>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-[#f5f8fa]">
-                  {['Order ID', 'Customer', 'Total', 'Payment', 'Status'].map(h => (
-                    <th key={h} className="text-left px-5 py-3 font-heading font-semibold text-[0.75rem]
-                                           text-[#3d5a65] uppercase tracking-wider whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {recentOrders.map(order => (
-                  <tr key={order.id} className="hover:bg-[#f9fbfc] transition-colors">
-                    <td className="px-5 py-3.5">
-                      <Link href={`/admin/orders/${order.id}`}
-                        className="font-heading font-semibold text-sm text-brand-teal hover:underline">
-                        {order.id}
-                      </Link>
-                    </td>
-                    <td className="px-5 py-3.5 font-body text-sm text-[#0f1f28] whitespace-nowrap">{order.customer}</td>
-                    <td className="px-5 py-3.5 font-display text-sm text-brand-teal-dark whitespace-nowrap">
-                      Rs. {order.total.toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className={`text-[0.72rem] font-heading font-semibold px-2.5 py-0.5 rounded-full border ${
-                        order.payment === 'COD' ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-blue-50 text-blue-600 border-blue-200'
-                      }`}>
-                        {order.payment}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">
-                      <span className={`text-[0.72rem] font-heading font-semibold px-2.5 py-0.5 rounded-full border ${STATUS_COLORS[order.status]}`}>
-                        {order.status}
-                      </span>
-                    </td>
+          {recentOrders.length === 0 ? (
+            <p className="px-6 py-8 font-body text-sm text-gray-400 text-center">No orders yet</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-[#f5f8fa]">
+                    {['Order ID', 'Customer', 'Total', 'Payment', 'Status'].map(h => (
+                      <th key={h} className="text-left px-5 py-3 font-heading font-semibold text-[0.75rem]
+                                             text-[#3d5a65] uppercase tracking-wider whitespace-nowrap">
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {recentOrders.map(order => (
+                    <tr key={order.id} className="hover:bg-[#f9fbfc] transition-colors">
+                      <td className="px-5 py-3.5">
+                        <Link href={`/admin/orders/${order.id}`}
+                          className="font-heading font-semibold text-sm text-brand-teal hover:underline">
+                          #{order.id.slice(-8).toUpperCase()}
+                        </Link>
+                      </td>
+                      <td className="px-5 py-3.5 font-body text-sm text-[#0f1f28] whitespace-nowrap">{order.fullName}</td>
+                      <td className="px-5 py-3.5 font-display text-sm text-brand-teal-dark whitespace-nowrap">
+                        Rs. {order.total.toLocaleString()}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={`text-[0.72rem] font-heading font-semibold px-2.5 py-0.5 rounded-full border ${
+                          order.paymentMethod === 'COD' ? 'bg-gray-100 text-gray-600 border-gray-200' : 'bg-blue-50 text-blue-600 border-blue-200'
+                        }`}>
+                          {order.paymentMethod}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className={`text-[0.72rem] font-heading font-semibold px-2.5 py-0.5 rounded-full border ${STATUS_COLORS[order.status] ?? ''}`}>
+                          {order.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Quick Links */}
@@ -113,15 +152,13 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
-          {/* Low stock alert */}
-          {lowStock > 0 && (
+          {lowStockCount > 0 && (
             <div className="bg-brand-yellow/20 border border-brand-yellow/50 rounded-2xl p-5">
               <p className="font-heading font-semibold text-sm text-brand-teal-dark mb-1">⚠️ Low Stock Alert</p>
               <p className="font-body text-xs text-[#3d5a65] mb-3">
-                {lowStock} product{lowStock > 1 ? 's' : ''} running low on stock.
+                {lowStockCount} product{lowStockCount > 1 ? 's' : ''} running low on stock.
               </p>
-              <Link href="/admin/products" className="text-xs font-heading font-semibold text-brand-teal
-                                                       hover:underline underline-offset-2">
+              <Link href="/admin/products" className="text-xs font-heading font-semibold text-brand-teal hover:underline underline-offset-2">
                 Review Products →
               </Link>
             </div>

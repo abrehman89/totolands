@@ -1,11 +1,17 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { prisma } from '@/lib/prisma'
 import AdminProductForm from '@/components/admin/AdminProductForm'
 import AdminHeader from '@/components/admin/AdminHeader'
 
 export const metadata: Metadata = { title: 'Add Product' }
 
-export default function AdminNewProductPage() {
+export default async function AdminNewProductPage() {
+  const categories = await prisma.category.findMany({
+    orderBy: { name: 'asc' },
+    select: { id: true, name: true },
+  })
+
   return (
     <div className="p-6 lg:p-8 mt-[56px] lg:mt-0">
       <AdminHeader
@@ -17,7 +23,7 @@ export default function AdminNewProductPage() {
           </Link>
         }
       />
-      <AdminProductForm />
+      <AdminProductForm categories={categories} />
     </div>
   )
 }
