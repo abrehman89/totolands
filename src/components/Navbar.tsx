@@ -76,11 +76,17 @@ export default function Navbar() {
                     Admin
                   </Link>
                 )}
-                <div className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5">
+                <Link href="/orders"
+                  className="text-white/80 font-heading font-semibold text-xs px-3 py-1.5
+                             rounded-full hover:bg-white/15 transition-colors">
+                  Orders
+                </Link>
+                <Link href="/account"
+                  className="flex items-center gap-1.5 bg-white/15 rounded-full px-3 py-1.5 hover:bg-white/25 transition-colors">
                   <span className="font-heading font-semibold text-white text-xs">
                     {session.user.name?.split(' ')[0]}
                   </span>
-                </div>
+                </Link>
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="text-white/70 font-heading font-semibold text-xs hover:text-white
@@ -123,10 +129,22 @@ export default function Navbar() {
               className="w-full pl-9 pr-4 py-2 rounded-full bg-white/15 text-white placeholder-white/60 text-sm outline-none"/>
           </div>
           {session ? (
-            <button onClick={() => signOut({ callbackUrl: '/' })}
-              className="bg-white/20 text-white font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">
-              Logout ({session.user.name?.split(' ')[0]})
-            </button>
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <Link href="/orders" onClick={() => setMenuOpen(false)}
+                  className="flex-1 bg-white/15 text-white font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">
+                  My Orders
+                </Link>
+                <Link href="/account" onClick={() => setMenuOpen(false)}
+                  className="flex-1 bg-white/15 text-white font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">
+                  Account
+                </Link>
+              </div>
+              <button onClick={() => signOut({ callbackUrl: '/' })}
+                className="bg-white/20 text-white font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">
+                Logout ({session.user.name?.split(' ')[0]})
+              </button>
+            </div>
           ) : (
             <Link href="/auth/login"
               className="bg-brand-yellow text-brand-teal-dark font-heading font-semibold text-sm px-4 py-2 rounded-full text-center">

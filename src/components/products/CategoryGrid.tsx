@@ -71,6 +71,7 @@ export default function CategoryGrid({ categoryName }: Props) {
             onAge={a   => handleFilterChange(() => setSelectedAge(a))}
             onPrice={r => handleFilterChange(() => setPriceRange(r))}
             onReset={reset}
+            categories={[]}
             totalResults={filtered.length}
             hideCategoryFilter
           />
