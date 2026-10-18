@@ -142,17 +142,23 @@ Nunito               → body font     → CSS var: --font-nunito   → Tailwind
   - Role: `ADMIN`
 - **Login tested and working** ✅
 
-### ✅ Completed Infrastructure
+### ✅ Completed Infrastructure (2026-10-19)
 - **Products + checkout wired to real DB** ✅
 - **`/orders`** — customer order history from Supabase ✅
 - **`/account`** — customer profile edit (name, phone) ✅
+- **All admin dashboard pages wired to real DB** ✅
+  - Overview: real revenue, counts, recent orders
+  - Products table + Add/Edit product forms → `/api/admin/products`
+  - Orders table + detail + status save → `/api/admin/orders/[id]`
+  - Customers: real users with order count and spent
+  - Categories: real list + Add Category → DB
+  - Banners: real list + toggle/delete → DB
 
 ### 🔲 Next Steps (in order)
 1. **Cloudinary** — image upload in AdminProductForm (replace paste-URL with real upload)
 2. **Resend** — order confirmation email after checkout
 3. **PayFast PK** — real payment integration in checkout
-4. **Wire admin dashboard to real DB** — products/orders/customers/categories/banners all still use mock data
-5. **Deploy to Vercel** + connect totolands.com domain
+4. **Deploy to Vercel** + connect totolands.com domain
 
 ---
 

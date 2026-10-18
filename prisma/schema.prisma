@@ -1,0 +1,170 @@
+// Totolands — Prisma Schema
+// Database: PostgreSQL via Supabase
+// Run: npx prisma db push   (to sync schema to Supabase)
+// Run: npx prisma generate  (to regenerate the client)
+// Run: npx prisma studio    (to browse data in browser)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Users ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  password  String?  // null when using OAuth
+  role      Role     @default(CUSTOMER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders    Order[]
+  addresses Address[]
+
+  @@map("users")
+}
+
+// ─── Categories ───────────────────────────────────────────────────────────────
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  slug     String    @unique
+  image    String?
+  products Product[]
+
+  @@map("categories")
+}
+
+// ─── Products ─────────────────────────────────────────────────────────────────
+
+enum Badge {
+  sale
+  new
+  top
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String
+  features    String[] // array of feature strings
+  price       Int      // in PKR (paise not needed)
+  oldPrice    Int?
+  stock       Int      @default(0)
+  rating      Float    @default(0)
+  reviews     Int      @default(0)
+  ageRange    String?
+  material    String?
+  inBox       String?
+  badge       Badge?
+  badgeText   String?
+  image       String   // main image URL (Cloudinary)
+  images      String[] // additional image URLs
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems  OrderItem[]
+
+  @@map("products")
+}
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+
+enum OrderStatus {
+  Pending
+  Confirmed
+  Shipped
+  Delivered
+  Cancelled
+}
+
+enum PaymentMethod {
+  COD
+  PayFast
+}
+
+model Order {
+  id            String        @id @default(cuid())
+  userId        String?       // null for guest checkout
+  user          User?         @relation(fields: [userId], references: [id])
+  total         Int
+  deliveryFee   Int           @default(0)
+  status        OrderStatus   @default(Pending)
+  paymentMethod PaymentMethod
+  // Delivery details (snapshot at time of order)
+  fullName      String
+  phone         String
+  email         String?
+  address       String
+  city          String
+  province      String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items         OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  name      String  // snapshot of name at time of order
+  image     String  // snapshot of image at time of order
+  price     Int     // snapshot of price at time of order
+  qty       Int
+
+  @@map("order_items")
+}
+
+// ─── Addresses ────────────────────────────────────────────────────────────────
+
+model Address {
+  id       String  @id @default(cuid())
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label    String? // e.g. "Home", "Office"
+  fullName String
+  phone    String
+  address  String
+  city     String
+  province String?
+  isDefault Boolean @default(false)
+
+  @@map("addresses")
+}
+
+// ─── Banners ──────────────────────────────────────────────────────────────────
+
+model Banner {
+  id       String  @id @default(cuid())
+  title    String
+  subtitle String?
+  image    String
+  link     String
+  active   Boolean @default(true)
+  order    Int     @default(0) // display order
+
+  @@map("banners")
+}
