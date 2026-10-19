@@ -5,7 +5,8 @@
 // Run: npx prisma studio    (to browse data in browser)
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
 datasource db {
