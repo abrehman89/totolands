@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { prisma } from '@/lib/prisma'
 import AdminHeader from '@/components/admin/AdminHeader'
+
+export const dynamic = 'force-dynamic'
 import AdminCategoriesClient from '@/components/admin/AdminCategoriesClient'
 
 export const metadata: Metadata = { title: 'Categories' }

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+
+export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import AdminProductForm from '@/components/admin/AdminProductForm'
 import AdminHeader from '@/components/admin/AdminHeader'
