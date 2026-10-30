@@ -4,6 +4,8 @@
 
 @layer base {
   :root {
+    --font-baloo2: 'Baloo 2', cursive;
+    --font-nunito: 'Nunito', sans-serif;
     --shadow-card: 0 4px 24px rgba(46, 107, 122, 0.13);
     --shadow-btn:  0 4px 18px rgba(46, 107, 122, 0.38);
   }

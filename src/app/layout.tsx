@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { Baloo_2, Nunito } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -7,22 +6,6 @@ import AnnouncementBar from '@/components/AnnouncementBar'
 import { CartProvider } from '@/lib/cart-context'
 import { WishlistProvider } from '@/lib/wishlist-context'
 import SessionProvider from '@/components/SessionProvider'
-
-const baloo2 = Baloo_2({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  variable: '--font-baloo2',
-  display: 'swap',
-  preload: false,
-})
-
-const nunito = Nunito({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-nunito',
-  display: 'swap',
-  preload: false,
-})
 
 export const metadata: Metadata = {
   title: "Totolands — Your Littles' Tiny World",
@@ -35,7 +18,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${baloo2.variable} ${nunito.variable}`}>
+    <html lang="en">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body>
         <SessionProvider>
           <CartProvider>
