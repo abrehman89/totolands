@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --shadow-card: 0 4px 20px rgba(46, 107, 122, 0.12);
-    --shadow-btn:  0 4px 14px rgba(46, 107, 122, 0.35);
+    --shadow-card: 0 4px 24px rgba(46, 107, 122, 0.13);
+    --shadow-btn:  0 4px 18px rgba(46, 107, 122, 0.38);
   }
 
   body {
@@ -15,6 +15,21 @@
   * {
     box-sizing: border-box;
   }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-33.333%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-9px); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @layer components {
@@ -53,7 +68,9 @@
 
   .section-title {
     @apply font-display text-3xl md:text-4xl text-[#0f1f28];
+    font-weight: 800;
     text-wrap: balance;
+    letter-spacing: -0.01em;
   }
 
   .inner {

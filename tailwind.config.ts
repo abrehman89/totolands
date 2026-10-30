@@ -21,8 +21,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ['var(--font-fredoka)', 'cursive'],
-        heading: ['var(--font-fredoka)', 'sans-serif'],
+        display: ['var(--font-baloo2)', 'cursive'],
+        heading: ['var(--font-baloo2)', 'sans-serif'],
         body:    ['var(--font-nunito)', 'sans-serif'],
       },
       borderRadius: {

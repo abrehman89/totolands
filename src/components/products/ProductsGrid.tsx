@@ -11,9 +11,10 @@ interface Props {
   products: ProductDetail[]
   categories: string[]
   initialCategory?: string
+  initialSearch?: string
 }
 
-export default function ProductsGrid({ products, categories, initialCategory = 'All' }: Props) {
+export default function ProductsGrid({ products, categories, initialCategory = 'All', initialSearch = '' }: Props) {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory)
   const [selectedAge, setSelectedAge]           = useState('All Ages')
   const [priceRange, setPriceRange]             = useState<[number, number]>([0, 99999])
@@ -31,6 +32,15 @@ export default function ProductsGrid({ products, categories, initialCategory = '
 
   const filtered = useMemo(() => {
     let list = [...products]
+
+    if (initialSearch) {
+      const q = initialSearch.toLowerCase()
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q)
+      )
+    }
 
     if (selectedCategory !== 'All') {
       list = list.filter(p => p.category === selectedCategory)

@@ -22,6 +22,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Resolve real product IDs — cart stores slug as id, so look up cuid by slug
+    const resolvedItems = await Promise.all(
+      items.map(async (item: { id: string; dbId?: string; name: string; image: string; price: number; qty: number }) => {
+        let productId = item.dbId
+        if (!productId) {
+          const product = await prisma.product.findUnique({ where: { slug: item.id }, select: { id: true } })
+          productId = product?.id ?? item.id
+        }
+        return { productId, name: item.name, image: item.image, price: item.price, qty: item.qty }
+      })
+    )
+
     // Create order + order items in a single transaction
     const order = await prisma.order.create({
       data: {
@@ -38,15 +50,7 @@ export async function POST(req: NextRequest) {
         deliveryFee,
         status:        'Pending',
         items: {
-          create: items.map((item: {
-            id: string; dbId?: string; name: string; image: string; price: number; qty: number
-          }) => ({
-            productId: item.dbId ?? item.id,
-            name:      item.name,
-            image:     item.image,
-            price:     item.price,
-            qty:       item.qty,
-          })),
+          create: resolvedItems,
         },
       },
       include: { items: true },

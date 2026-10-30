@@ -5,9 +5,9 @@ import Image from 'next/image'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import AdminHeader from '@/components/admin/AdminHeader'
+import ProductImportExport, { type ExportProduct } from '@/components/admin/ProductImportExport'
 
 export const metadata: Metadata = { title: 'Products' }
-export const revalidate = 30
 
 export default async function AdminProductsPage() {
   const products = await prisma.product.findMany({
@@ -15,15 +15,37 @@ export default async function AdminProductsPage() {
     orderBy: { createdAt: 'desc' },
   })
 
+  const exportProducts: ExportProduct[] = products.map(p => ({
+    name:         p.name,
+    slug:         p.slug,
+    categoryName: p.category.name,
+    categorySlug: p.category.slug,
+    description:  p.description,
+    price:        p.price,
+    oldPrice:     p.oldPrice,
+    stock:        p.stock,
+    ageRange:     p.ageRange,
+    material:     p.material,
+    inBox:        p.inBox,
+    badge:        p.badge,
+    badgeText:    p.badgeText,
+    image:        p.image,
+    images:       p.images,
+    features:     p.features,
+  }))
+
   return (
     <div className="p-6 lg:p-8 mt-[56px] lg:mt-0">
       <AdminHeader
         title="Products"
         subtitle={`${products.length} total products`}
         action={
-          <Link href="/admin/products/new" className="btn-primary text-sm px-5 py-2.5">
-            + Add Product
-          </Link>
+          <div className="flex items-center gap-2 flex-wrap">
+            <ProductImportExport products={exportProducts} />
+            <Link href="/admin/products/new" className="btn-primary text-sm px-5 py-2.5">
+              + Add Product
+            </Link>
+          </div>
         }
       />
 
@@ -107,6 +129,14 @@ export default async function AdminProductsPage() {
               ))}
             </tbody>
           </table>
+
+          {products.length === 0 && (
+            <div className="text-center py-16">
+              <p className="text-4xl mb-3">📦</p>
+              <p className="font-heading font-semibold text-[#3d5a65]">No products yet</p>
+              <p className="font-body text-sm text-gray-400 mt-1">Add your first product or import a CSV file</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

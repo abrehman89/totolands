@@ -1,13 +1,16 @@
 'use client'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useCart } from '@/lib/cart-context'
+import { useCart, useCartMounted } from '@/lib/cart-context'
 
 const DELIVERY_FEE = 250
 const FREE_DELIVERY_THRESHOLD = 3000
 
 export default function CartClient() {
   const { items, removeItem, updateQty, clearCart, totalItems, totalPrice } = useCart()
+  const mounted = useCartMounted()
+
+  if (!mounted) return null
 
   const deliveryFee = totalPrice >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE
   const grandTotal  = totalPrice + deliveryFee

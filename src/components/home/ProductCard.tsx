@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useCart } from '@/lib/cart-context'
+import { useWishlist } from '@/lib/wishlist-context'
 
 export interface Product {
   id: string
@@ -18,9 +19,10 @@ export interface Product {
 }
 
 export default function ProductCard({ product }: { product: Product }) {
-  const [wishlisted, setWishlisted] = useState(false)
   const [added, setAdded] = useState(false)
   const { addItem } = useCart()
+  const { toggle, isWished } = useWishlist()
+  const wishlisted = isWished(product.id)
 
   function handleAdd() {
     addItem({ id: product.id, name: product.name, category: product.category,
@@ -42,7 +44,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {product.badge === 'top' && <span className="badge-top">🏆 Top Pick</span>}
 
         <button
-          onClick={() => setWishlisted(!wishlisted)}
+          onClick={() => toggle(product)}
           className="absolute top-2.5 right-2.5 bg-white/90 rounded-full w-9 h-9 flex items-center
                      justify-center z-10 hover:bg-white hover:scale-110 transition-all text-lg
                      shadow-md"

@@ -1,6 +1,13 @@
 'use client'
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 
+// Prevents hydration mismatch — cart is only read from localStorage on the client
+export function useCartMounted() {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+  return mounted
+}
+
 export interface CartItem {
   id: string       // slug — used for routing
   dbId?: string    // real DB cuid — used for order creation

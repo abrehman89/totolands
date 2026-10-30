@@ -1,35 +1,36 @@
 import { notFound }    from 'next/navigation'
 import type { Metadata } from 'next'
-import { CATEGORIES }    from '@/lib/products-data'
 import CategoryGrid      from '@/components/products/CategoryGrid'
 
 // Map URL slug → display name
 const SLUG_TO_CATEGORY: Record<string, string> = {
-  'remote-control':  'Remote Control',
-  'soft-toys':       'Soft Toys',
+  'cars':            'Cars & Vehicles',
+  'stuffed-animals': 'Stuffed Animals',
   'building-blocks': 'Building Blocks',
-  'arts-crafts':     'Arts & Crafts',
-  'dolls':           'Dolls',
-  'outdoor':         'Outdoor',
-  'puzzles':         'Puzzles',
-  'pretend-play':    'Pretend Play',
-  'educational':     'Educational',
   'board-games':     'Board Games',
+  'arts-crafts':     'Arts & Crafts',
   'action-figures':  'Action Figures',
+  'outdoor':         'Outdoor Play',
+  'gift-sets':       'Gift Sets',
+  'puzzles':         'Puzzles',
+  'educational':     'Educational',
+  'pretend-play':    'Pretend Play',
+  'dolls':           'Dolls',
 }
 
 const CATEGORY_EMOJI: Record<string, string> = {
-  'Remote Control':  '🏎️',
-  'Soft Toys':       '🧸',
+  'Cars & Vehicles': '🚗',
+  'Stuffed Animals': '🧸',
   'Building Blocks': '🧱',
+  'Board Games':     '🎮',
   'Arts & Crafts':   '🎨',
-  'Dolls':           '🪆',
-  'Outdoor':         '⛺',
+  'Action Figures':  '🤖',
+  'Outdoor Play':    '🎠',
+  'Gift Sets':       '🎁',
   'Puzzles':         '🧩',
-  'Pretend Play':    '🎭',
   'Educational':     '📚',
-  'Board Games':     '🎲',
-  'Action Figures':  '🦸',
+  'Pretend Play':    '🎭',
+  'Dolls':           '🪆',
 }
 
 interface Props { params: { slug: string } }
@@ -83,22 +84,19 @@ export default function CategoryPage({ params }: Props) {
       <section className="bg-brand-green-light border-b border-brand-teal/10">
         <div className="inner py-3 overflow-x-auto">
           <div className="flex gap-2 min-w-max">
-            {CATEGORIES.filter(c => c !== 'All').map(cat => {
-              const slug = Object.keys(SLUG_TO_CATEGORY).find(
-                k => SLUG_TO_CATEGORY[k] === cat
-              )
-              const active = cat === categoryName
+            {Object.entries(SLUG_TO_CATEGORY).map(([slug, name]) => {
+              const active = slug === params.slug
               return (
                 <a
-                  key={cat}
-                  href={slug ? `/category/${slug}` : '/products'}
+                  key={slug}
+                  href={`/category/${slug}`}
                   className={`text-[0.8rem] px-4 py-1.5 rounded-full font-heading font-semibold
                               whitespace-nowrap transition-all ${
                     active
                       ? 'bg-brand-teal text-white shadow-btn'
                       : 'bg-white text-brand-teal-dark border border-brand-teal/20 hover:bg-brand-teal hover:text-white'
                   }`}>
-                  {CATEGORY_EMOJI[cat]} {cat}
+                  {CATEGORY_EMOJI[name]} {name}
                 </a>
               )
             })}

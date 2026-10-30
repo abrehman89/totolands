@@ -9,11 +9,17 @@ export const metadata: Metadata = {
 
 export const revalidate = 60 // re-fetch from DB every 60 seconds
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams,
+}: {
+  searchParams: { q?: string }
+}) {
   const [products, categories] = await Promise.all([
     getAllProducts(),
     getCategories(),
   ])
+
+  const searchQuery = searchParams.q?.trim() ?? ''
 
   return (
     <main>
@@ -24,7 +30,7 @@ export default async function ProductsPage() {
           <h1
             className="font-display text-white mt-1"
             style={{ fontSize: 'clamp(1.8rem, 4vw, 2.8rem)' }}>
-            All Products
+            {searchQuery ? `Results for "${searchQuery}"` : 'All Products'}
           </h1>
           <p className="font-body text-white/80 mt-2 text-sm">
             Discover {products.length}+ toys for kids of all ages — delivered across Pakistan
@@ -37,7 +43,7 @@ export default async function ProductsPage() {
         </div>
       </section>
 
-      <ProductsGrid products={products} categories={categories} />
+      <ProductsGrid products={products} categories={categories} initialSearch={searchQuery} />
     </main>
   )
 }

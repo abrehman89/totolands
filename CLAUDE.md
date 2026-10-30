@@ -60,11 +60,11 @@ Off White:    #F7FBFD  (page background)
 
 ### Fonts (Google Fonts via next/font)
 ```
-Fredoka (weight 600) → display font  → CSS var: --font-fredoka  → Tailwind: font-display
-Fredoka (300-700)    → heading font  → CSS var: --font-fredoka  → Tailwind: font-heading
-Nunito               → body font     → CSS var: --font-nunito   → Tailwind: font-body
+Baloo 2 (400–800)  → display + heading font → CSS var: --font-baloo2  → Tailwind: font-display, font-heading
+Nunito             → body font              → CSS var: --font-nunito  → Tailwind: font-body
 ```
-> `Fredoka_One` no longer exists in Google Fonts — use `Fredoka` weight `'600'` instead.
+> Use `Baloo_2` (with underscore) as the import name in next/font. Weight 800 for big headlines, 700 for section titles, 600 for buttons/nav.
+> `Fredoka_One` no longer exists in Google Fonts. `Fredoka` was the previous font before the 2026-10-22 redesign.
 
 ### Key CSS Classes (globals.css)
 ```
@@ -159,15 +159,96 @@ Nunito               → body font     → CSS var: --font-nunito   → Tailwind
 - **Resend** order confirmation emails wired in `/api/orders` ✅
 - **PayFast PK** payment integration in checkout ✅
 - **Production build fixed** — `eslint.ignoreDuringBuilds: true` in next.config.mjs, Suspense wrapper on LoginClient ✅
-- **`export const dynamic = 'force-dynamic'`** added to all API routes (required for Vercel) ✅
+- **`export const dynamic = 'force-dynamic'`** added to ALL API routes + ALL pages (required for Vercel + Prisma) ✅
+- **Prisma Linux binary target** added to schema.prisma (`rhel-openssl-1.0.x`) ✅
+- **`prisma generate`** added to build script in package.json so Prisma client is always fresh on Vercel ✅
+- **ESLint blocking rules** disabled in `.eslintrc.json` (`no-explicit-any`, `no-unescaped-entities`) ✅
 - **totolands.com** domain connected to Vercel ✅
-- **GitHub** pushed and up to date (master branch) ✅
+- **GitHub** — all fixes pushed to `main` branch; Vercel watches `main` ✅
+- **Vercel deployment SUCCESSFUL** ✅ — totolands.com is live!
+- **Vercel environment variables** set:
+  - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` ✅
+  - `DATABASE_URL`, `DIRECT_URL` (real Supabase values) ✅
+  - `NEXTAUTH_SECRET`, `NEXTAUTH_URL` ✅
+  - `RESEND_API_KEY` (placeholder — replace when Resend account set up)
+  - `RESEND_FROM_EMAIL` = `orders@totolands.com`
+  - `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE` (placeholder — replace when PayFast account set up)
+  - `PAYFAST_SANDBOX` = `false`
+- **Cart hydration fix** — added `useCartMounted` hook to prevent cart showing empty on first render ✅
+- **Order API fix** — `/api/orders` now looks up real product cuid by slug before creating OrderItem (fixes "Failed to place order" error) ✅
+
+### ✅ Visual Redesign (2026-10-22)
+- **Font**: Upgraded from Fredoka → **Baloo 2** (weight 400–800). Variable `--font-baloo2`. Much bolder and more playful for a kids brand. Body font stays Nunito.
+- **AnnouncementBar** (`src/components/AnnouncementBar.tsx`) — scrolling ticker added above Navbar in layout: Free Delivery · COD options · 50K families · Returns · Gift Wrap. CSS `marquee` keyframe animation at 38s loop.
+- **HeroSection** — full redesign: warm yellow gradient + dot-grid pattern + color blobs, Baloo 2 800 weight headline with SVG curl underline accent, tilted image card with second image peeking behind, 4 float-animated badges, trust chips row, stat bubble, wave SVG divider at bottom.
+- **PromoStrip** — redesigned as 4-column grid (added Gift Wrap as 4th), subtle hover lift on each tile.
+- **CategoriesSection** — `'use client'` component; each category card has unique color accent (red/Cars, pink/Stuffed, teal/Blocks, purple/Games, orange/Arts, green/Action); colored top stripe + colored count + hover border in card's own accent color.
+- **PromoBanners** (`src/components/home/PromoBanners.tsx`) — NEW component added between CategoriesSection and FeaturedProducts: two full-color banners — 🔥 Mega Sale (red/orange gradient) + ✨ New Arrivals (purple gradient), each with dot-grid pattern, decorative circles, bold Baloo 2 text, colored CTA.
+- **SaleBanner** — pulsing live indicator, SVG underline on "40% Off", circular percentage badge over center image, glow blob decorations.
+- **ShopByAge** — each age card has unique accent stripe, emoji, colored "Shop Now →" pill button.
+- **globals.css** — added `@keyframes marquee`, `float`, `fadeInUp`; `section-title` now `font-weight: 800` + `letter-spacing: -0.01em`.
+- **layout.tsx** — switched to `Baloo_2` import, added `AnnouncementBar` above `Navbar`.
+- **tailwind.config.ts** — font variables updated to `--font-baloo2`.
+- **page.tsx** — `PromoBanners` added between `CategoriesSection` and `FeaturedProducts`.
+
+### ✅ Admin: Bulk CSV Import + Export (2026-10-23)
+- **`papaparse@latest`** + `@types/papaparse` installed for CSV parsing
+- **`src/app/api/admin/products/import/route.ts`** — POST endpoint: validates each row, finds category by slug, auto-generates slug from name if blank, handles pipe-separated features/images, returns `{ created, errors[] }`
+- **`src/components/admin/ProductImportExport.tsx`** — client component added to admin products page header with:
+  - **Export ▾ dropdown**: CSV (plain text) + Excel (SpreadsheetML `.xls`, no library — opens in all Excel versions)
+  - **Import CSV modal** (3-step): download template → upload + parse with papaparse → preview table (first 20 rows) → confirm → results screen with per-row error details
+- **`src/app/admin/products/page.tsx`** — updated to pass serialized `ExportProduct[]` to `ProductImportExport` and render it alongside "+ Add Product"
+- **CSV columns**: `name`*, `categorySlug`*, `price`*, `stock`*, `image`*, description, oldPrice, badge (sale/new/top), badgeText, ageRange, material, inBox, features (pipe-separated), images (pipe-separated), slug (auto-generated if blank)
+
+### ✅ Wishlist Feature (2026-10-23)
+- **`src/lib/wishlist-context.tsx`** — `WishlistProvider` + `useWishlist()` hook; same localStorage pattern as cart (`totolands-wishlist`); exposes `items`, `toggle`, `isWished`, `remove`, `totalItems`
+- **`src/app/wishlist/page.tsx`** + **`src/components/wishlist/WishlistClient.tsx`** — full wishlist page: teal header with item count, product grid, ❤️ remove button per card, "+ Cart" button with green flash, empty state with Browse CTA
+- **`ProductCard.tsx`** — heart button now uses `toggle(product)` + `isWished(product.id)` from context instead of local `useState`; wishlist state persists across navigation and page reloads
+- **`Navbar.tsx`** — wishlist icon changed from static `<button>` to `<Link href="/wishlist">`; live red badge shows real count from `useWishlist()`; badge hidden when wishlist is empty
+- **`layout.tsx`** — `WishlistProvider` added wrapping the app (inside `CartProvider`)
+
+### ✅ Live Search Bar (2026-10-23)
+- **`src/app/api/search/route.ts`** — `GET /api/search?q=...`: Prisma query with `contains` + `mode: 'insensitive'` across product name, description, and category name; returns top 7 results with id, name, slug, image, price, oldPrice, badge, categoryName
+- **`src/components/SearchBar.tsx`** — fully functional search component (`variant: 'navbar' | 'mobile'`):
+  - Debounced 280ms — fires after user stops typing
+  - Min 2 characters to trigger search
+  - Dropdown shows: product thumbnail, name, category (green), price + strikethrough old price
+  - Keyboard navigation: Arrow Up/Down highlights results, Enter navigates, Escape closes
+  - ✕ clear button when query is present
+  - Spinner while loading
+  - Empty state ("No products found") when no matches
+  - "View all results for X →" at bottom → navigates to `/products?q=...`
+  - Click outside closes dropdown
+- **`Navbar.tsx`** — both desktop and mobile search inputs replaced with `<SearchBar />` component
+- **`src/app/products/page.tsx`** — now reads `searchParams.q`; passes as `initialSearch` prop to `ProductsGrid`; page heading changes to `Results for "X"` when search is active
+- **`src/components/products/ProductsGrid.tsx`** — added `initialSearch?: string` prop; filters products client-side by name/category/description when set; all sidebar filters still apply on top
+
+### ✅ Real Banner Images (2026-10-30)
+- **`toto-banner-1.webp`**, **`toto-banner-2.webp`**, **`toto-banner-3.webp`** — copied from Downloads to `public/images/`
+- **PromoBanners** (`src/components/home/PromoBanners.tsx`) — replaced gradient-only banners with 3 real product images in a 3-column grid; each card is a clickable link with hover scale + shadow lift
+- **HeroSection** (`src/components/home/HeroSection.tsx`) — replaced placeholder images:
+  - Main hero card: `hero-main.webp` (← toto-banner-2.webp)
+  - Peeking card behind: `hero-peek.webp` (← toto-banner-3.webp)
+- **SaleBanner** (`src/components/home/SaleBanner.tsx`) — replaced underwater placeholder with `sale-banner.webp` (← toto-banner-1.webp)
+- All images are stored locally in `public/images/` — no external URL dependency
 
 ### 🔲 Next Steps
-1. **Verify Vercel deployment succeeds** — last build was fixing `/api/auth/[...nextauth]` force-dynamic error; check Deployments tab
-2. **Test live site** — login, add product with image upload, place a test order
-3. **Resend domain verification** — add DNS records from resend.com for `totolands.com` so emails don't go to spam
-4. **Add Resend + PayFast env vars to Vercel** — still using placeholder values
+1. **Push all changes to GitHub** — banner images + hero + sale banner + cart fix + order API fix are local only, not yet pushed
+2. **Test order placement on totolands.com** — localhost has slow Supabase connection; test on live site instead
+3. **Resend setup** — create account at resend.com, get real API key, verify totolands.com domain (add DNS records), update `RESEND_API_KEY` in Vercel
+4. **PayFast setup** — apply at payfast.pk, get merchant credentials, update `PAYFAST_MERCHANT_ID`, `PAYFAST_MERCHANT_KEY`, `PAYFAST_PASSPHRASE` in Vercel
+5. **Add real products** — log in to totolands.com/admin/products/new and add real products with images
+
+## Known Issues & Fixes
+- **Localhost Supabase timeout** — Supabase free tier is slow from local machine; always test order placement on live site (totolands.com), not localhost
+- **Cart shows empty on first load** — fixed with `useCartMounted` hook (local, not yet pushed)
+- **Order placement fails** — fixed with slug→cuid lookup in `/api/orders` (local, not yet pushed)
+
+## Known Vercel/Deployment Notes
+- **Always push to `main` branch** — Vercel watches `main`, not `master`
+- **`export const dynamic = 'force-dynamic'`** must be on every page/route that uses Prisma or NextAuth
+- **Prisma schema** has `binaryTargets = ["native", "rhel-openssl-1.0.x"]` for Linux (Vercel) compatibility
+- **Build command** runs `prisma generate` before `next build`
 
 ---
 
@@ -204,8 +285,12 @@ totolands/
 │   │   │   └── [slug]/page.tsx        ← Single product detail
 │   │   ├── category/
 │   │   │   └── [slug]/page.tsx        ← Category filtered listing
+│   │   ├── api/
+│   │   │   └── search/route.ts        ← GET /api/search?q= (live product search)
 │   │   ├── cart/
 │   │   │   └── page.tsx               ← Shopping cart
+│   │   ├── wishlist/
+│   │   │   └── page.tsx               ← Wishlist page
 │   │   ├── checkout/
 │   │   │   └── page.tsx               ← 3-step checkout
 │   │   ├── auth/
@@ -215,9 +300,11 @@ totolands/
 │   │       ├── layout.tsx             ← Admin layout (sidebar, no main Navbar/Footer)
 │   │       ├── page.tsx               ← Dashboard overview
 │   │       ├── products/
-│   │       │   ├── page.tsx           ← Products table
+│   │       │   ├── page.tsx           ← Products table (+ Import/Export buttons)
 │   │       │   ├── new/page.tsx       ← Add product form
-│   │       │   └── edit/page.tsx      ← Edit product form
+│   │       │   ├── edit/page.tsx      ← Edit product form
+│   │       │   └── import/            ← (API only)
+│   │       │       └── route.ts       ← POST: bulk import from CSV rows
 │   │       ├── orders/
 │   │       │   ├── page.tsx           ← Orders table
 │   │       │   └── [id]/page.tsx      ← Order detail + status manager
@@ -225,9 +312,10 @@ totolands/
 │   │       ├── categories/page.tsx    ← Categories manager
 │   │       └── banners/page.tsx       ← Banners manager
 │   ├── components/
-│   │   ├── Navbar.tsx                 ← Sticky teal navbar, live cart badge, auth state
+│   │   ├── Navbar.tsx                 ← Sticky teal navbar, live cart/wishlist badges, auth state, SearchBar
 │   │   ├── Footer.tsx                 ← Teal-dark footer
 │   │   ├── SessionProvider.tsx        ← NextAuth SessionProvider wrapper
+│   │   ├── SearchBar.tsx              ← Live search: debounced, dropdown with image+name+price, keyboard nav
 │   │   ├── home/
 │   │   │   ├── HeroSection.tsx
 │   │   │   ├── PromoStrip.tsx
@@ -246,6 +334,8 @@ totolands/
 │   │   │   └── ProductDetailClient.tsx← Single product client component
 │   │   ├── cart/
 │   │   │   └── CartClient.tsx         ← Full cart UI
+│   │   ├── wishlist/
+│   │   │   └── WishlistClient.tsx     ← Wishlist grid + remove + add-to-cart
 │   │   ├── checkout/
 │   │   │   └── CheckoutClient.tsx     ← 3-step checkout UI
 │   │   ├── auth/
@@ -256,13 +346,15 @@ totolands/
 │   │       ├── AdminSidebar.tsx       ← Sidebar + mobile hamburger drawer
 │   │       ├── AdminHeader.tsx        ← Page title + subtitle + action slot
 │   │       ├── AdminProductForm.tsx   ← Add/Edit product form
-│   │       └── OrderStatusManager.tsx ← Click-to-change order status widget
+│   │       ├── OrderStatusManager.tsx ← Click-to-change order status widget
+│   │       └── ProductImportExport.tsx← Export CSV/Excel + Import CSV modal
 │   ├── lib/
 │   │   ├── prisma.ts                  ← Singleton PrismaClient
 │   │   ├── auth.ts                    ← NextAuth authOptions
 │   │   ├── products-data.ts           ← ALL_PRODUCTS, CATEGORIES, AGE_GROUPS, SORT_OPTIONS (mock, pre-DB)
 │   │   ├── admin-data.ts              ← Mock ADMIN_ORDERS, ADMIN_CUSTOMERS, ADMIN_BANNERS (pre-DB)
-│   │   └── cart-context.tsx           ← CartProvider + useCart hook (localStorage)
+│   │   ├── cart-context.tsx           ← CartProvider + useCart hook (localStorage)
+│   │   └── wishlist-context.tsx       ← WishlistProvider + useWishlist hook (localStorage)
 │   ├── middleware.ts                  ← Edge middleware: protects /admin, /account, /orders
 │   └── types/
 │       └── next-auth.d.ts             ← Extends Session + JWT with id + role
@@ -284,6 +376,7 @@ totolands/
 /checkout            → Place order             ✅ DONE
 /auth/login          → Login                   ✅ DONE (wired to NextAuth)
 /auth/signup         → Signup                  ✅ DONE (wired to /api/auth/signup)
+/wishlist            → Saved products          ✅ DONE (localStorage, remove + add-to-cart)
 /orders              → Order history           ✅ DONE (real DB, server component)
 /account             → Customer profile        ✅ DONE (edit name/phone, sign out)
 ```

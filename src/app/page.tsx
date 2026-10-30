@@ -1,6 +1,7 @@
-import HeroSection      from '@/components/home/HeroSection'
-import PromoStrip       from '@/components/home/PromoStrip'
+import HeroSection       from '@/components/home/HeroSection'
+import PromoStrip        from '@/components/home/PromoStrip'
 import CategoriesSection from '@/components/home/CategoriesSection'
+import PromoBanners      from '@/components/home/PromoBanners'
 import FeaturedProducts  from '@/components/home/FeaturedProducts'
 import SaleBanner        from '@/components/home/SaleBanner'
 import NewArrivals       from '@/components/home/NewArrivals'
@@ -14,6 +15,7 @@ export default function HomePage() {
       <HeroSection />
       <PromoStrip />
       <CategoriesSection />
+      <PromoBanners />
       <FeaturedProducts />
       <SaleBanner />
       <NewArrivals />
