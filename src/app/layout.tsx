@@ -13,6 +13,7 @@ const baloo2 = Baloo_2({
   weight: ['400', '500', '600', '700', '800'],
   variable: '--font-baloo2',
   display: 'swap',
+  preload: false,
 })
 
 const nunito = Nunito({
@@ -20,6 +21,7 @@ const nunito = Nunito({
   weight: ['400', '500', '600', '700'],
   variable: '--font-nunito',
   display: 'swap',
+  preload: false,
 })
 
 export const metadata: Metadata = {
